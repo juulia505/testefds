@@ -8,34 +8,42 @@ sns.set_style("dark")
 cor_genero = ['#F781D8', '#819FF7']
 
 df = pd.read_csv('https://raw.githubusercontent.com/V1n1ci0s/projeto-Kayo_ter-a/main/base%20dados.csv')
-df.head()
 
-# @title Tendência das taxas globais de suicídio ao longo do tempo por sex
+# Exibir o dataframe inicial
+st.write(df.head())
 
-import matplotlib.pyplot as plt
-
+# Tendência das taxas globais de suicídio ao longo do tempo por sexo
 df_trend = df.groupby(['year', 'sex'])['suicides/100k pop'].mean().unstack()
 
-df_trend.plot(kind='line', figsize=(10, 6))
-plt.xlabel('Ano')
-plt.ylabel('Taxa média de suicídio por 100 mil habitantes')
-plt.title('Tendência das taxas globais de suicídio ao longo do tempo por sexo')
-_ = plt.legend(title='Sex')
+fig, ax = plt.subplots(figsize=(10, 6))
+df_trend.plot(kind='line', ax=ax)
+ax.set_xlabel('Ano')
+ax.set_ylabel('Taxa média de suicídio por 100 mil habitantes')
+ax.set_title('Tendência das taxas globais de suicídio ao longo do tempo por sexo')
+ax.legend(title='Sex')
+st.pyplot(fig)
 
-df.info()
+# Informações do dataframe
+st.write(df.info())
 
+# Filtrando dados do Brasil
 df_brasil = df[df['country']=='Brazil'].copy()
-df_brasil.head()
 
-df_brasil.shape
+# Exibindo o dataframe do Brasil
+st.write(df_brasil.head())
 
-print('Mundo------------')
-display(df.isnull().sum())
-print('Brasil----------')
-display(df_brasil.isnull().sum())
+# Forma dos dataframes
+st.write("Forma do dataframe mundial:", df.shape)
+st.write("Forma do dataframe do Brasil:", df_brasil.shape)
 
-#Pegar a média mundial e do Brasil em suicídios
-anos = df_brasil.year.unique()
+# Valores nulos
+st.write('Mundo------------')
+st.write(df.isnull().sum())
+st.write('Brasil----------')
+st.write(df_brasil.isnull().sum())
+
+# Média de suicídios no Brasil e mundial ao longo dos anos
+anos = df_brasil['year'].unique()
 suicidio_brasil_media = df_brasil.groupby('year')['suicides/100k pop'].mean()
 suicidio_mundial_media = df.groupby('year')['suicides/100k pop'].mean()
 gdp_media_mundo = df.groupby('year')['gdp_per_capita ($)'].mean()
@@ -43,103 +51,95 @@ gdp_media_brasil = df_brasil.groupby('year')['gdp_per_capita ($)'].mean()
 
 suicidio_mundial_media.drop(2016, inplace=True)
 
-fig = plt.figure(figsize=(15,5))
-ax = sns.lineplot(x=anos,y=suicidio_mundial_media, label='Mundial', color='blue')
-ax = sns.lineplot(x=anos, y = suicidio_brasil_media, label='Brasil', color='green')
-plt.title('Média de suicídio ao longo do tempo (Brasil X Mundo)', fontsize=19)
-plt.ylabel('N° de casos a cada 100 mil pessoas',fontsize=13)
+fig, ax = plt.subplots(figsize=(15, 5))
+sns.lineplot(x=anos, y=suicidio_mundial_media, label='Mundial', color='blue', ax=ax)
+sns.lineplot(x=anos, y=suicidio_brasil_media, label='Brasil', color='green', ax=ax)
+ax.set_title('Média de suicídio ao longo do tempo (Brasil X Mundo)', fontsize=19)
+ax.set_ylabel('N° de casos a cada 100 mil pessoas', fontsize=13)
+st.pyplot(fig)
 
-
-df.groupby('year')['suicides/100k pop'].sum()
-
+# Tabela de suicídios por faixa etária no Brasil
 tabela = pd.pivot_table(df_brasil, values='suicides_no', index=['year'], columns=['age'])
 column_order = ['5-14 years', '15-24 years', '25-34 years', '35-54 years', '55-74 years', '+75 years']
 tabela = tabela.reindex(column_order, axis=1)
-tabela.head()
+st.write(tabela.head())
 
-tabela2 = pd.pivot_table(df_brasil, values ='suicides/100k pop',index=['sex'],columns=['year'])
+tabela2 = pd.pivot_table(df_brasil, values='suicides/100k pop', index=['sex'], columns=['year'])
 tabela2 = tabela2.T
 
-26267 / tabela.sum().sum()
+fig, ax = plt.subplots(figsize=(16, 8))
+tabela.plot.bar(stacked=True, ax=ax)
+ax.legend(title='Idade')
+ax.set_xlabel(' ')
+ax.set_title('Suicídio por faixa etária', fontsize=21)
+st.pyplot(fig)
 
-tabela.plot.bar(stacked=True,figsize=(16,8))
-plt.legend(title='Idade')
-plt.xlabel(' ')
-plt.title(' Suicídio por faixa etária',fontsize=21);
-
-df_brasil['generation'].value_counts().sum()
-
-82 / df_brasil['generation'].value_counts().sum().sum()
-
-fig = plt.figure(figsize=(13,5))
-sns.countplot(x='generation', order = df_brasil['generation'].value_counts().index, data = df_brasil) # Changed 'generation' to x='generation'
-plt.xlabel('Gerações', fontsize=13)
-plt.ylabel(' ')
-plt.title('Suicídio por geração',fontsize=21);
+fig, ax = plt.subplots(figsize=(13, 5))
+sns.countplot(x='generation', order=df_brasil['generation'].value_counts().index, data=df_brasil, ax=ax)
+ax.set_xlabel('Gerações', fontsize=13)
+ax.set_ylabel(' ')
+ax.set_title('Suicídio por geração', fontsize=21)
+st.pyplot(fig)
 
 generos = df_brasil.groupby('sex').suicides_no.sum() / df_brasil.groupby('sex').suicides_no.sum().sum()
 
-fig = plt.figure(figsize=(6,6))
-plt.pie(generos, labels=['MULHERES', 'HOMENS'], colors = cor_genero, autopct='%1.1f%%', shadow = True, startangle=90)
-plt.title('Número de suicídio por gênero (1985 - 2015)', fontsize=15);
+fig, ax = plt.subplots(figsize=(6, 6))
+ax.pie(generos, labels=['MULHERES', 'HOMENS'], colors=cor_genero, autopct='%1.1f%%', shadow=True, startangle=90)
+ax.set_title('Número de suicídio por gênero (1985 - 2015)', fontsize=15)
+st.pyplot(fig)
 
-#Quantas vezes a mais o homem se suicida em relação às mulheres?
-df_brasil.groupby('sex').suicides_no.sum()[1] / df_brasil.groupby('sex').suicides_no.sum()[0]
+# Quantidade de suicídios por gênero no Brasil
+st.write(f"Quantas vezes a mais o homem se suicida em relação às mulheres? {df_brasil.groupby('sex').suicides_no.sum()[1] / df_brasil.groupby('sex').suicides_no.sum()[0]}")
 
-tabela2.plot.bar(stacked=True, figsize=(15,5), color=cor_genero)
-plt.xlabel(' ')
-plt.title('Gênero ao longo do tempo', fontsize=19)
-plt.ylabel('N° de suicídio a cada 100 mil pessoas', fontsize=13);
+fig, ax = plt.subplots(figsize=(15, 5))
+tabela2.plot.bar(stacked=True, color=cor_genero, ax=ax)
+ax.set_xlabel(' ')
+ax.set_title('Gênero ao longo do tempo', fontsize=19)
+ax.set_ylabel('N° de suicídio a cada 100 mil pessoas', fontsize=13)
+st.pyplot(fig)
 
-mulheres = df.groupby(['sex', 'age'])['suicides_no'].sum()[:6] # sexo e idade --> numero de suicidios --> somar e pegar os 6 primeiros
-homens = df.groupby(['sex', 'age'])['suicides_no'].sum()[6:] # sexo e idade --> numero de suicidios --> somar e pegar os 6 ultimos
-m = [] # Mulheres
-h = [] # Homens
-mn = [] # Numero de mulheres
-hn = [] # Numero de homens
-for i in range(6):
-  m.append(mulheres.index[i][1].split(' ')[0])
-  h.append(homens.index[i][1].split(' ')[0])
-  mn.append(mulheres[i])
-  hn.append(homens[i])
+# Faixa etária por sexo
+mulheres = df.groupby(['sex', 'age'])['suicides_no'].sum()[:6]
+homens = df.groupby(['sex', 'age'])['suicides_no'].sum()[6:]
 
+fig, ax = plt.subplots(figsize=(10, 5))
+sns.barplot(x=[x.split(' ')[0] for x in mulheres.index.get_level_values(1)], y=mulheres.values, ax=ax)
+ax.set_title('Faixa etária (mulheres)', fontsize=19)
+st.pyplot(fig)
 
-fig = plt.figure(figsize=(10,5))
-sns.barplot(x=m, y = mn) # Remove the 'data' parameter as it's not needed when directly passing x and y values
-plt.title('Faixa etária (mulheres)', fontsize=19);
+fig, ax = plt.subplots(figsize=(10, 5))
+sns.barplot(x=[x.split(' ')[0] for x in homens.index.get_level_values(1)], y=homens.values, ax=ax)
+ax.set_title('Faixa etária (homens)', fontsize=19)
+st.pyplot(fig)
 
-fig = plt.figure(figsize=(10,5))
-sns.barplot(x=h, y = hn) # Remove the 'data' parameter as it's not needed when directly passing x and y values
-plt.title('Faixa etária (homens)', fontsize=19);
-
-print(f'''
-Total de homens: {sum(hn)}
-Total de mulheres: {sum(mn)}
+st.write(f'''
+Total de homens: {sum(homens)}
+Total de mulheres: {sum(mulheres)}
 ''')
 
+fig, ax = plt.subplots(figsize=(15, 5))
+sns.lineplot(x=anos, y=gdp_media_brasil, color='green', ax=ax)
+ax.set_ylabel('PIB per capita ($)', fontsize=15)
+ax.set_title('PIB per capita ao longo do tempo', fontsize=19)
+st.pyplot(fig)
 
-fig = plt.figure(figsize=(15,5))
-ax = sns.lineplot(x=anos,y=gdp_media_brasil, color = 'green')
-plt.ylabel('PIB per capita ($)', fontsize=15)
-plt.title('PIB per capita ao longo do tempo',fontsize=19);
+fig, ax = plt.subplots(figsize=(15, 5))
+sns.regplot(x=gdp_media_brasil, y=suicidio_brasil_media, ax=ax, color='green')
+ax.set_title('Correlação entre PIB per capita e número de suicídios por 100 mil habitantes', fontsize=15)
+ax.set_ylabel('Média de suicídio / 100k habitantes', fontsize=13)
+ax.set_xlabel('PIB per capita ($)', fontsize=11)
+st.pyplot(fig)
 
-fig = plt.figure(figsize=(15,5))
-sns.regplot(x=gdp_media_brasil, y =suicidio_brasil_media, data=df_brasil, color='green')
-plt.title('Correlação entre PIB per capita e número de suicídios por 100 mil habitantes',fontsize=15)
-plt.ylabel('Média de suicídio / 100k habitantes', fontsize=13)
-plt.xlabel('PIB per capita ($)',fontsize=11)
+fig, ax = plt.subplots(figsize=(15, 5))
+sns.lineplot(x=anos, y=suicidio_brasil_media, color='green', ax=ax)
+ax.set_title('Média de suicídio a cada ano por 100 mil habitantes', fontsize=15)
+ax.set_ylabel('Média de suicídio / 100k habitantes', fontsize=13)
+st.pyplot(fig)
 
-
-
-fig = plt.figure(figsize=(15,5))
-sns.lineplot(x=anos, y =suicidio_brasil_media, color = 'green')
-plt.title('Média de suicídio a cada ano por 100 mil habitantes', fontsize=15)
-plt.ylabel('Média de suicídio / 100k habitantes', fontsize=13)
-
-
-fig = plt.figure(figsize=(15,5))
-sns.regplot(x=anos, y =suicidio_brasil_media, data=df_brasil, color='green')
-plt.title('Média de suicídio no Brasil a cada 100 mil habitantes ao longo do tempo',fontsize=17)
-plt.ylabel('Média de suicídio / 100k habitantes', fontsize=13)
-plt.xlabel('Anos',fontsize=13)
-sns.lineplot(x=anos, y =suicidio_brasil_media, color = 'green')
+fig, ax = plt.subplots(figsize=(15, 5))
+sns.regplot(x=anos, y=suicidio_brasil_media, ax=ax, color='green')
+ax.set_title('Média de suicídio no Brasil a cada 100 mil habitantes ao longo do tempo', fontsize=17)
+ax.set_ylabel('Média de suicídio / 100k habitantes', fontsize=13)
+ax.set_xlabel('Anos', fontsize=13)
+sns.lineplot(x=anos, y=suicidio_brasil_media, color='green', ax=ax)
+st.pyplot(fig)
